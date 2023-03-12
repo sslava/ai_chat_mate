@@ -1,0 +1,28 @@
+wheel
+
+# Utils
+PyYAML
+python-dateutil
+
+# Cloud stuff
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+google-cloud-firestore
+google-cloud-logging
+google-cloud-storage
+google-cloud-monitoring
+google-cloud-pubsub
+grpcio
+
+# Http and server
+marshmallow
+aiogram<3.0
+aiohttp
+
+# Data stuff
+scipy
+pandas
+
+# AI stuff
+openai
