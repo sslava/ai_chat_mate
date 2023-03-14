@@ -1,4 +1,4 @@
-import logging
+import asyncio
 import random
 
 from aiogram import types
@@ -8,7 +8,7 @@ from .telegram import dp
 from .open_ai_client import get_joke, get_assistance
 from .i_can_break import sorry_if_exception
 from .cmd_credits import maybe_send_credits
-
+from .typing_block import TypingBlock
 
 JOKE_PROBABILITY = 0.05
 NUM_LAST_MESSAGES = 10
@@ -26,10 +26,12 @@ async def answer(message: types.Message, state: FSMContext, *args, **kwargs):
         await state.set_data({"history": history[-10:]})
         return
 
-    ai_message_coroutine = handler(user_id=message.from_user.id, history=history)
-    await maybe_send_credits(message)
+    async with TypingBlock(message.chat):
+        _, ai_message = await asyncio.gather(
+            maybe_send_credits(message),
+            handler(user_id=message.from_user.id, history=history)
+        )
 
-    ai_message = await ai_message_coroutine
     await message.answer(ai_message)
     history = history + [{"role": "assistant", "content": ai_message}]
 

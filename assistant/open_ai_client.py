@@ -23,12 +23,12 @@ You are a creative, friendly American comedian. Tell the joke as an answer. Don'
 """
 
 
-def get_assistance(user_id, history):
-    return create_message(as_assistant, user_id, history)
+async def get_assistance(user_id, history):
+    return await create_message(as_assistant, user_id, history)
 
 
-def get_joke(user_id, history):
-    return create_message(as_comedian, user_id, history)
+async def get_joke(user_id, history):
+    return await create_message(as_comedian, user_id, history)
 
 
 async def create_message(promt, user_id, history):
@@ -38,6 +38,6 @@ async def create_message(promt, user_id, history):
         try:
             response: OpenAIObject = openai.ChatCompletion.create(messages=messages, user=str(user_id), **cgi)
             return response['choices'][0]['message']['content']
-        except openai.error.APIError as e:
+        except (openai.error.APIError, openai.error.RateLimitError) as e:
             logging.warning(f"Get exception from OpenAI: {e}")
             await asyncio.sleep(i**2)
