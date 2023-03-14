@@ -34,7 +34,7 @@ def get_joke(user_id, history):
 async def create_message(promt, user_id, history):
     history = history or []
     messages = [{"role": "system", "content": promt}] + history
-    for i in range(0, 5):
+    for i in range(0, 10):
         try:
             response: OpenAIObject = openai.ChatCompletion.create(messages=messages, user=str(user_id), **cgi)
             return response['choices'][0]['message']['content']
