@@ -16,7 +16,7 @@ NUM_LAST_MESSAGES = 10
 
 @dp.message_handler()
 @sorry_if_exception()
-@dp.async_task()
+@dp.async_task
 async def answer(message: types.Message, state: FSMContext, *args, **kwargs):
     handler = get_handler(message)
 
