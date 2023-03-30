@@ -3,6 +3,7 @@ import os
 from .telegram import *
 from .cmd_start import *
 from .cmd_credits import *
+from .cmd_clear import *
 from .chat import *
 
 

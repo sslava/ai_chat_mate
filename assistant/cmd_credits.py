@@ -6,7 +6,7 @@ from .i_can_break import sorry_if_exception
 
 FEEDBACK_URL = "https://3qugszanpzk.typeform.com/to/ifCEiciG"
 GITHUB_URL = "https://github.com/vgalilei/ai_chat_mate"
-CREDITS_PROBABILITY = 0.05
+CREDITS_PROBABILITY = 0.01
 
 
 async def maybe_send_credits(message: types.Message, *args, **kwargs):
