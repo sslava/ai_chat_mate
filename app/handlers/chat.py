@@ -25,6 +25,8 @@ class ChatHandler(core.BasicHandler):
             state: dispatcher.FSMContext,
             *args, **kwargs
     ):
+        if message.chat.type != types.ChatType.PRIVATE:
+            return
         user: storage.TelegramUser = kwargs.get('user')
         async with state.proxy() as proxy:
             history = chat.ChatHistory(proxy)
