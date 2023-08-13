@@ -1,5 +1,6 @@
 import random
 from aiogram import types, dispatcher
+from aiogram.utils.exceptions import MessageNotModified
 
 from baski.telegram import chat, storage
 from baski.primitives import datetime
@@ -35,8 +36,11 @@ class ChatHandler(core.BasicHandler):
                     user_id=user.id,
                     history=history.last(CHAT_HISTORY_LENGTH, fmt="openai"),
                     message=message.text):
-                answer = await answer.edit_text(text=text)
-                await message.chat.do("typing")
+                try:
+                    answer = await answer.edit_text(text=text)
+                    await message.chat.do("typing")
+                except MessageNotModified as e:
+                    pass
 
             history.from_ai(answer)
         await self.maybe_show_credits(message, user)
