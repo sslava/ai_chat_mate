@@ -1,28 +1,34 @@
-import random
 from aiogram import types
-from .telegram import dp
-from .i_can_break import sorry_if_exception
+from baski.primitives import datetime
+from baski.telegram import storage
+import core
+
+__all__ = ['CreditsHandler']
+
+
+class CreditsHandler(core.BasicHandler):
+
+    async def on_message(
+            self,
+            message: types.Message,
+            user: core.TelegramUser,
+            *args, **kwargs
+    ):
+        await self.send_to(message, user, self.ctx.users)
+
+    @classmethod
+    async def send_to(cls, message: types.Message, user: core.TelegramUser, users: storage.UsersStorage):
+        answer = msg_credits.get(
+            message.from_user.language_code,
+            msg_credits['en']
+        )
+        user.last_credits = datetime.now()
+        users.set(user)
+        await message.answer(**answer)
 
 
 FEEDBACK_URL = "https://3qugszanpzk.typeform.com/to/ifCEiciG"
 GITHUB_URL = "https://github.com/vgalilei/ai_chat_mate"
-CREDITS_PROBABILITY = 0.01
-
-
-async def maybe_send_credits(message: types.Message, *args, **kwargs):
-    if message.chat.type != 'private' or random.random() > CREDITS_PROBABILITY:
-        return
-    await send_credits(message)
-
-
-@dp.message_handler(commands=["credits"])
-@sorry_if_exception()
-async def send_credits(message: types.Message, *args, **kwargs):
-    answer = msg_credits.get(
-        message.from_user.language_code,
-        msg_credits['en']
-    )
-    await message.answer(**answer)
 
 
 msg_credits = {

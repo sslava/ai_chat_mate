@@ -1,11 +1,17 @@
-FROM python:3.10-slim
+FROM  ghcr.io/galilei2050/baski:latest
 
+# Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
-
 ENV APP_HOME /app
+
 WORKDIR $APP_HOME
-COPY . ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY ./app ./
+COPY requirements.txt ./
 
-CMD exec python3 -m assistant.main
+# Install production dependencies.
+RUN pip install --upgrade pip && pip install --use-pep517 --check-build-dependencies --no-cache-dir --compile -U \
+    -r requirements.txt && rm requirements.txt
+
+
+CMD exec python3 -m main

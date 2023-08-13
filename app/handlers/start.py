@@ -1,22 +1,30 @@
-from aiogram import types
+from aiogram import types, dispatcher
 
-from .telegram import dp
-from .cmd_credits import send_credits
-from .i_can_break import sorry_if_exception
+from .credits import CreditsHandler
+import core
+
+__all__ = ['StartHandler']
 
 
-# https://platform.openai.com/docs/usage-policies/platform-policy
-@dp.message_handler(commands=["start"])
-@sorry_if_exception()
-async def welcome_user(message: types.Message, *args, **kwargs):
-    await send_credits(message)
+CHAT_HISTORY_LENGTH = 7
 
-    greeting_text = msg_greeting.get(
-        msg_greeting[message.from_user.language_code],
-        msg_greeting['en']
-    )
 
-    await message.answer(greeting_text)
+class StartHandler(core.BasicHandler):
+
+    async def on_message(
+            self,
+            message: types.Message,
+            *args,
+            user: core.TelegramUser,
+            **kwargs
+    ):
+        greeting_text = msg_greeting.get(
+            msg_greeting[message.from_user.language_code],
+            msg_greeting['en']
+        )
+        await message.answer(greeting_text)
+        await CreditsHandler.send_to(message, user, self.ctx.users)
+
 
 msg_greeting = {
     "en":
