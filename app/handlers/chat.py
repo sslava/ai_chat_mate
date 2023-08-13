@@ -47,7 +47,7 @@ class ChatHandler(core.BasicHandler):
             user: core.TelegramUser,
             *args, **kwargs
     ):
-        if datetime.now() - user.last_credits < CREDITS_COOLDOWN:
+        if datetime.now() - datetime.as_local(user.last_credits) < CREDITS_COOLDOWN:
             return
         if random.random() > CREDITS_PROBABILITY:
             return
