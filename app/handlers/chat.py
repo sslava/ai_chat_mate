@@ -14,7 +14,7 @@ __all__ = ['ChatHandler']
 CHAT_HISTORY_LENGTH = 7
 CREDITS_COOLDOWN = datetime.timedelta(days=5)
 CREDITS_PROBABILITY = 0.01
-MAX_MESSAGE_SIZE = 4096
+MAX_MESSAGE_SIZE = 64
 
 
 class ChatHandler(core.BasicHandler):
@@ -33,6 +33,7 @@ class ChatHandler(core.BasicHandler):
 
             answers = []
             await message.chat.do("typing")
+            last_answer_began = 0
             letters_written = 0
             async for text in self.ctx.openai.continue_chat(
                     user_id=user.id,
@@ -43,14 +44,12 @@ class ChatHandler(core.BasicHandler):
                         answers.append(await message.answer(text))
                         letters_written = len(text)
                         continue
-                    last_answer = answers[-1]
-                    letters_to_add = len(text) - letters_written
-                    text_to_add = text[letters_written:]
 
-                    if len(last_answer.text) + letters_to_add > MAX_MESSAGE_SIZE:
-                        answers.append(await message.answer(text_to_add))
+                    if len(text) - last_answer_began > MAX_MESSAGE_SIZE:
+                        last_answer_began = letters_written
+                        answers.append(await message.answer(text[letters_written:]))
                     else:
-                        answers[-1] = await last_answer.edit_text(text=last_answer.text + text_to_add)
+                        answers[-1] = await answers[-1].edit_text(text=text[last_answer_began:])
                     letters_written = len(text)
                     await message.chat.do("typing")
                 except MessageNotModified as e:
