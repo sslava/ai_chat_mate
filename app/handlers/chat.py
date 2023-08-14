@@ -14,7 +14,7 @@ __all__ = ['ChatHandler']
 CHAT_HISTORY_LENGTH = 7
 CREDITS_COOLDOWN = datetime.timedelta(days=5)
 CREDITS_PROBABILITY = 0.01
-MAX_MESSAGE_SIZE = 64
+MAX_MESSAGE_SIZE = 4096
 
 
 class ChatHandler(core.BasicHandler):
