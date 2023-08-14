@@ -18,10 +18,7 @@ class StartHandler(core.BasicHandler):
             user: core.TelegramUser,
             **kwargs
     ):
-        greeting_text = msg_greeting.get(
-            msg_greeting[message.from_user.language_code],
-            msg_greeting['en']
-        )
+        greeting_text = msg_greeting.get(message.from_user.language_code, msg_greeting['en'])
         await message.answer(greeting_text)
         await CreditsHandler.send_to(message, user, self.ctx.users)
 
