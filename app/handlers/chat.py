@@ -2,15 +2,13 @@ import random
 from aiogram import types, dispatcher
 from aiogram.utils.exceptions import MessageNotModified
 
-from baski.telegram import chat, storage
+from baski.telegram import chat, storage, monitoring
 from baski.primitives import datetime
 
 import core
 from .credits import CreditsHandler
 
-
 __all__ = ['ChatHandler']
-
 
 CHAT_HISTORY_LENGTH = 7
 CREDITS_COOLDOWN = datetime.timedelta(days=5)
@@ -25,8 +23,7 @@ class ChatHandler(core.BasicHandler):
             state: dispatcher.FSMContext,
             *args, **kwargs
     ):
-        if message.chat.type != types.ChatType.PRIVATE:
-            return
+        self.ctx.telemetry.add_message(monitoring.MESSAGE_IN, message)
         user: storage.TelegramUser = kwargs.get('user')
         async with state.proxy() as proxy:
             history = chat.ChatHistory(proxy)
@@ -45,6 +42,7 @@ class ChatHandler(core.BasicHandler):
                     pass
 
             history.from_ai(answer)
+        self.ctx.telemetry.add_message(monitoring.MESSAGE_OUT, answer)
         await self.maybe_show_credits(message, user)
 
     async def maybe_show_credits(

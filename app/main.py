@@ -1,11 +1,12 @@
 import argparse
 import typing
 from functools import cached_property, lru_cache
+from google.cloud import pubsub
 from aiogram.dispatcher import storage as aiogram_storage
 
 from baski.env import get_env
 from baski.server import aiogram_server
-from baski.telegram import storage, filters, handlers, middleware
+from baski.telegram import storage, filters, handlers, middleware, monitoring
 import handlers as app_handlers, core
 
 
@@ -27,9 +28,15 @@ class ChatMateBot(aiogram_server.TelegramServer):
     def context(self):
         return core.Context(
             db=self.db,
+            pubsub=self.pubsub,
             openai=self.openai_clinet,
             users=self.users,
+            telemetry=monitoring.MessageTelemetry(self.pubsub, self.args['project_id'])
         )
+
+    @cached_property
+    def pubsub(self):
+        return pubsub.PublisherClient()
 
     def add_arguments(self, parser: argparse.ArgumentParser):
         super().add_arguments(parser)
@@ -40,7 +47,7 @@ class ChatMateBot(aiogram_server.TelegramServer):
         self.receptionist.add_message_handler(app_handlers.ClearHandler(), commands=['clear'])
         self.receptionist.add_message_handler(app_handlers.StartHandler(self.context), commands=['start'])
         self.receptionist.add_message_handler(app_handlers.CreditsHandler(self.context), commands=['credits'])
-        self.receptionist.add_message_handler(app_handlers.ChatHandler(self.context))
+        self.receptionist.add_message_handler(app_handlers.ChatHandler(self.context), chat_type='private')
 
     def web_routes(self) -> typing.List:
         return []
