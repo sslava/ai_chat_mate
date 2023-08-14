@@ -25,7 +25,8 @@ class ChatHandler(core.BasicHandler):
             state: dispatcher.FSMContext,
             *args, **kwargs
     ):
-        self.ctx.telemetry.add_message(monitoring.MESSAGE_IN, message)
+        self.ctx.telemetry.add_message(monitoring.MESSAGE_IN, message, message.from_user)
+
         user: storage.TelegramUser = kwargs.get('user')
         async with state.proxy() as proxy:
             history = chat.ChatHistory(proxy)
@@ -59,7 +60,7 @@ class ChatHandler(core.BasicHandler):
 
             for answer in answers:
                 history.from_ai(answer)
-                self.ctx.telemetry.add_message(monitoring.MESSAGE_OUT, answer)
+                self.ctx.telemetry.add_message(monitoring.MESSAGE_OUT, answer, message.from_user)
         await self.maybe_show_credits(message, user)
 
     async def maybe_show_credits(
