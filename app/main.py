@@ -41,10 +41,13 @@ class ChatMateBot(aiogram_server.TelegramServer):
     def add_arguments(self, parser: argparse.ArgumentParser):
         super().add_arguments(parser)
         parser.add_argument('--openai-token', help='OpenAI API token', default=str(get_env('OPENAI_TOKEN', '')))
+        parser.add_argument('--payment-token', help="Telegram payment token", default=str(get_env("PAYMENT_TOKEN", "")))
 
     def register_handlers(self):
+        app_handlers.register_donate_handlers(self.receptionist, self.context, self.args['payment_token'])
+
         self.receptionist.add_error_handler(handlers.SaySorryHandler())
-        self.receptionist.add_message_handler(app_handlers.ClearHandler(), commands=['clear'])
+        self.receptionist.add_message_handler(app_handlers.ClearHandler(self.context), commands=['clear'])
         self.receptionist.add_message_handler(app_handlers.StartHandler(self.context), commands=['start'])
         self.receptionist.add_message_handler(app_handlers.CreditsHandler(self.context), commands=['credits'])
         self.receptionist.add_message_handler(app_handlers.ChatHandler(self.context), chat_type='private')
@@ -61,7 +64,7 @@ class ChatMateBot(aiogram_server.TelegramServer):
 
     def middlewares(self) -> typing.List:
         return [
-            middleware.UnprocessedMiddleware()
+            middleware.UnprocessedMiddleware(self.context.telemetry)
         ]
 
 

@@ -25,15 +25,14 @@ class ChatHandler(core.BasicHandler):
             state: dispatcher.FSMContext,
             *args, **kwargs
     ):
+        await message.chat.do("typing")
         self.ctx.telemetry.add_message(monitoring.MESSAGE_IN, message, message.from_user)
 
         user: storage.TelegramUser = kwargs.get('user')
         async with state.proxy() as proxy:
             history = chat.ChatHistory(proxy)
             history.from_user(message)
-
             answers = []
-            await message.chat.do("typing")
             last_answer_began = 0
             letters_written = 0
             async for text in self.ctx.openai.continue_chat(
@@ -73,4 +72,5 @@ class ChatHandler(core.BasicHandler):
             return
         if random.random() > CREDITS_PROBABILITY:
             return
-        await CreditsHandler.send_to(message, user, self.ctx.users)
+        credits_message = await CreditsHandler.send_to(message, user, self.ctx.users)
+        self.ctx.telemetry.add_message(core.SHOW_CREDITS, credits_message, message.from_user)

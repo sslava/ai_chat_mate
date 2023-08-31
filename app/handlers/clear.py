@@ -1,6 +1,6 @@
 from aiogram import types, dispatcher
-
-from baski.telegram import handlers, chat
+import core
+from baski.telegram import chat
 
 
 __all__ = ['ClearHandler']
@@ -9,9 +9,10 @@ __all__ = ['ClearHandler']
 CHAT_HISTORY_LENGTH = 7
 
 
-class ClearHandler(handlers.LogErrorHandler, handlers.TypedHandler):
+class ClearHandler(core.BasicHandler):
 
     async def on_message(self, message: types.Message, state: dispatcher.FSMContext, *args, **kwargs):
+        self.ctx.telemetry.add_message(core.CMD_CLEAR, message, message.from_user)
         async with state.proxy() as proxy:
             chat.ChatHistory(proxy).clear()
         answer = msg_clear.get(

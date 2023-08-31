@@ -15,6 +15,7 @@ class CreditsHandler(core.BasicHandler):
             *args, **kwargs
     ):
         await self.send_to(message, user, self.ctx.users)
+        self.ctx.telemetry.add_message(core.CMD_CREDITS, message, message.from_user)
 
     @classmethod
     async def send_to(cls, message: types.Message, user: core.TelegramUser, users: storage.UsersStorage):
@@ -24,7 +25,7 @@ class CreditsHandler(core.BasicHandler):
         )
         user.last_credits = datetime.now()
         users.set(user)
-        await message.answer(**answer)
+        return await message.answer(**answer)
 
 
 FEEDBACK_URL = "https://3qugszanpzk.typeform.com/to/ifCEiciG"
