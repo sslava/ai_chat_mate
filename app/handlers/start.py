@@ -26,14 +26,14 @@ class StartHandler(core.BasicHandler):
 
 msg_greeting = {
     "en":
-        "Hey!\n"
+        "Hey there! 👋\n"
         "I am ChatGPT based, a conversational bot. "
         "My purpose is to assist and engage in conversations with users on a variety of topics."
         "I can help answer questions, provide information, and have discussions with you.\n\n"
-        "Here is some examples, try one of them:\n"
-        "What's the capital of France?\n"
-        "Translate 'Hello, how are you?' to French.\n"
-        "Generate a short story about a detective solving a murder case.",
+        "👋 Here is some examples, try one of them:\n"
+        "- What's the capital of France?\n"
+        "- Translate 'Hello, how are you?' to French.\n"
+        "- Generate a short story about a detective solving a murder case.",
     "ru":
         "Здравствуйте!\n"
         "Я - ChatGPT, бот для разговоров. "

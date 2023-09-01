@@ -35,13 +35,15 @@ GITHUB_URL = "https://github.com/vgalilei/ai_chat_mate"
 msg_credits = {
     "en": {
         "parse_mode": "MarkdownV2",
-        "text": "This bot is developed by @galilei\. "
+        "text": "This bot is developed 🛠️ by @galilei\. "
                 "You are more than welcome to reach out with a suggestion or complain\."
                 "\n\nYour conversation is safe \- "
                 "bot never stores any of your messages without your explicit permission\. "
                 "The code is open\. Feel free to review the GitHub page\. "
                 "\n\nIf this bot is useful for you it will be useful for your friends\. "
-                "\n*Please don't hesitate to share it*",
+                "\n\n*We need your help to spread the word about this bot*\. Feel free to share it with your friends and colleagues"
+                "\n\nTo support the project you can /donate to the author\, or just leave a feedback\."
+                ,
         "reply_markup": types.InlineKeyboardMarkup(
             inline_keyboard=[
                 [
