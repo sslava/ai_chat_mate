@@ -12,6 +12,7 @@ google-cloud-firestore
 google-cloud-logging
 google-cloud-storage
 google-cloud-monitoring
+google-cloud-texttospeech
 google-cloud-pubsub
 grpcio
 

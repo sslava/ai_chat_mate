@@ -1,7 +1,9 @@
 import argparse
 import typing
+
 from functools import cached_property, lru_cache
-from google.cloud import pubsub
+from google.cloud import texttospeech as tts, pubsub
+from aiogram import types
 from aiogram.dispatcher import storage as aiogram_storage
 
 from baski.env import get_env
@@ -31,7 +33,8 @@ class ChatMateBot(aiogram_server.TelegramServer):
             pubsub=self.pubsub,
             openai=self.openai_clinet,
             users=self.users,
-            telemetry=monitoring.MessageTelemetry(self.pubsub, self.args['project_id'])
+            telemetry=monitoring.MessageTelemetry(self.pubsub, self.args['project_id']),
+            tts_client=tts.TextToSpeechClient()
         )
 
     @cached_property
@@ -50,7 +53,11 @@ class ChatMateBot(aiogram_server.TelegramServer):
         self.receptionist.add_message_handler(app_handlers.ClearHandler(self.context), commands=['clear'])
         self.receptionist.add_message_handler(app_handlers.StartHandler(self.context), commands=['start'])
         self.receptionist.add_message_handler(app_handlers.CreditsHandler(self.context), commands=['credits'])
-        self.receptionist.add_message_handler(app_handlers.ChatHandler(self.context), chat_type='private')
+        self.receptionist.add_message_handler(
+            app_handlers.ChatHandler(self.context),
+            chat_type='private',
+            content_types=[types.ContentType.TEXT, types.ContentType.VOICE]
+        )
 
     def web_routes(self) -> typing.List:
         return []
