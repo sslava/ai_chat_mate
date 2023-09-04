@@ -27,3 +27,4 @@ pandas
 
 # AI stuff
 openai
+langdetect
