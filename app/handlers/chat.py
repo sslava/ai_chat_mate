@@ -1,17 +1,20 @@
 import functools
 import io
 import random
+import openai
 import asyncio
 import tempfile
 import typing
+from copy import deepcopy
 
 import langdetect
 
 from aiogram import types, dispatcher
 from aiogram.utils.exceptions import MessageNotModified, RetryAfter, TelegramAPIError
 from google.cloud import texttospeech as tts
+from langdetect import LangDetectException
 
-from baski.concurrent import as_async, as_task
+from baski.concurrent import as_async
 from baski.telegram import chat, storage, monitoring
 from baski.primitives import datetime
 from baski.pattern import retry
@@ -37,7 +40,7 @@ class ChatHandler(core.BasicHandler):
     ):
         if message.voice:
             message.text = await self.text_from_voice(message)
-        await message.chat.do("typing")
+        await chat.aiogram_retry(message.chat.do, "typing")
         self.ctx.telemetry.add_message(monitoring.MESSAGE_IN, message, message.from_user)
 
         user: storage.TelegramUser = kwargs.get('user')
@@ -61,19 +64,26 @@ class ChatHandler(core.BasicHandler):
                 message=message.text):
             try:
                 if not answers:
-                    answers.append(await message.answer(text))
-                    letters_written = len(text)
+                    if text:
+                        answers.append(await chat.aiogram_retry(message.answer, text))
+                        letters_written = len(text)
                     continue
 
                 if len(text) - last_answer_began > MAX_MESSAGE_SIZE:
-                    last_answer_began = letters_written
-                    answers.append(await message.answer(text[letters_written:]))
                     if message.voice:
-                        await self.send_voice(message, text[last_answer_began:])
+                        await self.send_voice(message, answers[-1].text)
+                    last_answer_began = letters_written
+                    answers.append(await chat.aiogram_retry(message.answer, text[letters_written:]))
                 else:
-                    answers[-1] = await answers[-1].edit_text(text=text[last_answer_began:])
+                    answers[-1] = await chat.aiogram_retry(answers[-1].edit_text, text=text[last_answer_began:])
                 letters_written = len(text)
-                await message.chat.do("typing")
+                await chat.aiogram_retry(message.chat.do, "typing")
+            except openai.error.InvalidRequestError as e:
+                await chat.aiogram_retry(
+                    message.answer,
+                    f"Your request is too large for me to handle. "
+                    f"Please try again with a shorter message."
+                )
             except MessageNotModified as e:
                 pass
             except RetryAfter:
@@ -96,10 +106,13 @@ class ChatHandler(core.BasicHandler):
         self.ctx.telemetry.add_message(core.SHOW_CREDITS, credits_message, message.from_user)
 
     async def send_voice(self, message, text):
-        language = langdetect.detect(text)
+        try:
+            language = langdetect.detect(text)
+        except LangDetectException:
+            return
         voice = self.get_voice(language)
         if not voice:
-            await message.answer(f"Sorry, I don't know how to speak {language} yet")
+            await chat.aiogram_retry(message.answer, f"Sorry, I don't know how to speak {language} yet")
             return
         synthesis_input = tts.SynthesisInput(text=text)
         voice = tts.VoiceSelectionParams(
@@ -115,11 +128,11 @@ class ChatHandler(core.BasicHandler):
             voice=voice,
             audio_config=audio_config
         )
-        await message.answer_voice(response.audio_content)
+        await chat.aiogram_retry(message.answer_voice, response.audio_content)
 
     async def text_from_voice(self, message):
         with tempfile.TemporaryDirectory() as tempdir:
-            placeholder = await message.reply("🎙 Transcribing voice message...")
+            placeholder = await chat.aiogram_retry(message.reply, "🎙 Transcribing voice message...")
             await message.chat.do("typing")
             buffer = await retry(
                 message.voice.download,
@@ -129,7 +142,7 @@ class ChatHandler(core.BasicHandler):
             buffer.flush()
             with io.FileIO(buffer.name, 'rb') as read_buffer:
                 text = await self.ctx.openai.transcribe(read_buffer)
-                await placeholder.edit_text(f"🎙 Transcription is: \"{text}\"")
+                await chat.aiogram_retry(placeholder.edit_text, f"🎙 Transcription is: \"{text}\"")
                 return text
 
     def get_voice(self, language):
