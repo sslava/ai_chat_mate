@@ -62,7 +62,7 @@ class ChatHandler(core.BasicHandler):
         await self.maybe_show_credits(message, user)
 
     async def answer_to_text(self, user, message, history):
-        answers = []
+        answers: typing.List[types.Message] = []
         last_answer_began = 0
         letters_written = 0
         async for text in self.ctx.openai.continue_chat(
@@ -82,7 +82,8 @@ class ChatHandler(core.BasicHandler):
                     last_answer_began = letters_written
                     answers.append(await chat.aiogram_retry(message.answer, text[letters_written:]))
                 else:
-                    answers[-1] = await chat.aiogram_retry(answers[-1].edit_text, text=text[last_answer_began:])
+                    if answers[-1].text != text[last_answer_began:]:
+                        answers[-1] = await chat.aiogram_retry(answers[-1].edit_text, text=text[last_answer_began:])
                 letters_written = len(text)
                 await chat.aiogram_retry(message.chat.do, "typing")
             except MessageNotModified as e:
