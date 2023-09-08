@@ -47,8 +47,15 @@ class ChatHandler(core.BasicHandler):
         async with state.proxy() as proxy:
             history = chat.ChatHistory(proxy)
             history.from_user(message)
-            answers = await self.answer_to_text(user, message, history)
-
+            try:
+                answers = await self.answer_to_text(user, message, history)
+            except openai.error.InvalidRequestError as e:
+                await chat.aiogram_retry(
+                    message.answer,
+                    f"Large request are not supported yet. "
+                    f"Please try again with a shorter message.\n\n The /donate command is available to support large requests."
+                )
+                self.ctx.telemetry.add_message(core.LARGE_MESSAGE, message, message.from_user)
             for answer in answers:
                 history.from_ai(answer)
                 self.ctx.telemetry.add_message(monitoring.MESSAGE_OUT, answer, message.from_user)
@@ -78,12 +85,6 @@ class ChatHandler(core.BasicHandler):
                     answers[-1] = await chat.aiogram_retry(answers[-1].edit_text, text=text[last_answer_began:])
                 letters_written = len(text)
                 await chat.aiogram_retry(message.chat.do, "typing")
-            except openai.error.InvalidRequestError as e:
-                await chat.aiogram_retry(
-                    message.answer,
-                    f"Your request is too large for me to handle. "
-                    f"Please try again with a shorter message."
-                )
             except MessageNotModified as e:
                 pass
             except RetryAfter:
