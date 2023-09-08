@@ -72,15 +72,19 @@ class ChatHandler(core.BasicHandler):
             try:
                 if not answers:
                     if text:
-                        answers.append(await chat.aiogram_retry(message.answer, text))
-                        letters_written = len(text)
+                        answer = await chat.aiogram_retry(message.answer, text)
+                        if answer:
+                            answers.append(answer)
+                            letters_written = len(text)
                     continue
 
                 if len(text) - last_answer_began > MAX_MESSAGE_SIZE:
                     if message.voice:
                         await self.send_voice(message, answers[-1].text)
                     last_answer_began = letters_written
-                    answers.append(await chat.aiogram_retry(message.answer, text[letters_written:]))
+                    answer = await chat.aiogram_retry(message.answer, text[letters_written:])
+                    if answer:
+                        answers.append(answer)
                 else:
                     if answers[-1].text != text[last_answer_began:]:
                         answers[-1] = await chat.aiogram_retry(answers[-1].edit_text, text=text[last_answer_began:])
@@ -90,7 +94,7 @@ class ChatHandler(core.BasicHandler):
                 pass
             except RetryAfter:
                 await asyncio.sleep(1)
-        if message.voice:
+        if message.voice and answers:
             await self.send_voice(message, answers[-1].text)
         return answers
 
