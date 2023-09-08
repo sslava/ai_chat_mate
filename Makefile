@@ -9,4 +9,4 @@ build:
 	gcloud --project ${PROJECT_ID} builds submit . --region ${REGION} --suppress-logs --tag ${IMAGE} || true
 
 deploy:
-	gcloud --project ${PROJECT_ID} run deploy telegram-bot --region ${REGION} --image ${IMAGE} --max-instances=1 --memory=256Mi --cpu=1 --port=8080
+	gcloud --project ${PROJECT_ID} run deploy telegram-bot --region ${REGION} --image ${IMAGE} --max-instances=1 --memory=512Mi --cpu=1 --port=8080
